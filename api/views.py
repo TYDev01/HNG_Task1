@@ -1,19 +1,14 @@
 from django.http import JsonResponse
 import requests
-
+from ipware import get_client_ip
 
 my_weather_api_key = 'be0610be66cccb3fce8540aae404e8d7'
 
-
-
 def get_ip(request):
-    get_client_ip = request.META.get('HTTP_X_FORWARDED_FOR')
-    if get_client_ip:
-        ip = get_client_ip.split(',')[0]
-    else:
-        # ip = request.META.get('REMOTE_ADDR')
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
+    client_ip, is_routable = get_client_ip(request)
+    if client_ip is None:
+        client_ip = request.META.get('REMOTE_ADDR')
+    return client_ip
 
 def get_location(request):
     try:
@@ -30,6 +25,7 @@ def get_location(request):
         temperature = weather_data['main']['temp']
         
         return {
+            "ip": ip_address,
             "city": city,
         }, temperature
     except requests.RequestException:
